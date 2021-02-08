@@ -1,6 +1,154 @@
 Open edX Devstack |Build Status|
 ================================
 
+Tahoe Devstack Docs
+===================
+To run a Tahoe devstack follow the steps below:
+
+Requirements
+-------------
+
+- This project requires **Docker 17.06+ CE**.
+- You are required to have the needed GCloud permissions. To authenticate your requests, follow the steps in: `Authentication methods <https://cloud.google.com/container-registry/docs/advanced-authentication>`_
+
+Disclaimer
+----------
+- Apparently Docker behavior is inconsistent between Mac and Linux due to some core differences between both operating systems.
+- This README contains some known bugs and issues, make sure to search your issues here as they might be an issue we ran into before.
+
+.. code::
+
+    $ mkdir -p ~/work/tahoe-hawthorn  # It needs its own new directory
+    $ cd ~/work/tahoe-hawthorn
+    $ git clone https://github.com/appsembler/devstack.git
+    $ cd devstack  # Now the `devstack` repo should be on the `hawthorn` branch
+    $ make dev.provision
+    $ make dev.up
+
+Add /etc/hosts Entries
+----------------------
+
+Tahoe is all about subdomains, so please add the following entries to your ``/etc/hosts`` file:
+
+.. code::
+
+    127.0.0.1 edx.devstack.lms  # Needed for devstack nascence
+    127.0.0.1 red.localhost  # Your default site
+    127.0.0.1 blue.localhost green.localhost  # Create as many of those as you wish
+
+Where's my Site?
+----------------
+
+Now you have a site of your own:
+
+  - **LMS:** http://red.localhost:18000/
+  - **Studio:** http://localhost:18010/
+  - **AMC:** http://localhost:13000/
+
+Credentials are:
+
+ - **Email:** ``red@example.com``
+ - **Username:** ``red``
+ - **Password:** ``red``
+
+More on Tahoe and AMC
+---------------------
+
+You might want to access the ``/admin`` URLs below:
+
+- **LMS:** http://localhost:18000/admin/ and **Studio:** http://localhost:18010/admin/
+  Superuser credentials are ``edx`` with email ``edx@example.com`` and password ``edx``.
+
+- **AMC:** http://localhost:13000/admin/
+  Superuser credentials are ``amc`` with email ``amc@example.com`` and password ``amc``.
+
+More Good Devstack Stuff
+------------------------
+
+There's a couple of other shortcuts specific for Tahoe, run ``$ make help | grep -e tahoe -e amc``
+for a full list or checkout the ``tahoe.mk`` file to see the source code.
+Currently the commands looks like this:
+
+.. code::
+
+    $ make help | grep -e tahoe -e amc
+      amc.provision             Initializes the AMC
+      tahoe.chown               Fix annoying docker permission issues
+      tahoe.envs._delete        Remove settings, in prep for resetting it
+      tahoe.exec.edxapp         Execute a command in both LMS and Studio (edxapp containers)
+      tahoe.exec.single         Execute a command inside a devstack docker container
+      tahoe.provision           Make the devstack more Tahoe'ish
+      tahoe.restart             Restarts both of LMS and Studio python processes while keeping the same container
+
+
+Creating more sites is possible via the commands below:
+
+.. code:: bash
+
+    $ make amc-shell  # Inside your machine to open the AMC shell
+    $ ./manage.py create_devstack_site blue  # Inside the AMC shell
+    $ make lms-shell  # Inside your machine to open the LMS shell
+    $ ./manage.py lms create_devstack_site blue
+
+
+If something goes wrong, check out the rest of this README for additional details.
+
+Tahoe Specific Devstack Features
+--------------------------------
+The features below are specific to this Tahoe devstack repository and not found in
+the upstream devstck:
+
+Persistent Environment Files
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The environment files are now stored in the ``src/edxapp-envs`` directory near the ``edx-platform``
+so it can be edited using layman editors such as PyCharm and VSCode.
+
+Why? By default to edit the ``lms.env.json`` file and other JSON files,
+one need to SSH into the container and edit the file. Anyway, changes don't really persist after restarting the
+devstack.
+
+``$ dev.up`` command brings those files outside the container.
+
+Persistent Custom Python Packages
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Because of the statelessness of Docker containers, the devstack will forget any
+``pip install`` you'd do after restart.
+
+Knowing that most of the packages like Figures and Course Access Groups
+need to survive such restarts, this feature only works on LMS/Studio.
+
+The ``$ make tahoe.provision`` command will install all packages located inside
+the ``src/edxapp-pip`` directory. There's no need to run this command manually as it will
+run on every ``$ make dev.up``.
+
+For example to make Course Access Groups installed on every devstack startup:
+
+.. code:: bash
+
+    $ cd devstack/../src/edxapp-pip/
+    $ git clone git@github.com:appsembler/course-access-groups.git
+    $ cd ../../devstack
+    $ make dev.up  # Now the repository will always be installed on every startup
+
+Theme
+-----
+Tahoe themes are copied and available in ``edx-codebase-theme`` directory near the ``edx-platform``. Refer to `edx-theme-codebase#How to use on Devstack <https://github.com/appsembler/edx-theme-codebase#how-to-use-on-devstack>`_ for more info on setting up your custom theme.
+
+How to Solve a Devstack Problem
+-------------------------------
+If something goes wrong try doing ``$ make down`` then ``$ make dev.up``.
+
+If that doesn't help and it's not clear how to fix it, ``$ make dev.reset`` can be used to reset the devstack.
+**WARNING:** This will REMOVE all local changes that's not pushed to GitHub.
+
+Enterprise Devstack Docs
+========================
+TBD
+
+Open edX Docs
+=============
+
 Get up and running quickly with Open edX services.
 
 If you are seeking info on the Vagrant-based devstack, please see
@@ -8,6 +156,11 @@ https://openedx.atlassian.net/wiki/display/OpenOPS/Running+Devstack. This
 project is meant to replace the traditional Vagrant-based devstack with a
 multi-container approach driven by `Docker Compose`_. It is still in the
 beta testing phase.
+
+Updated Documentation
+---------------------
+
+These docs might be out of date. Please see the updated docs at https://edx.readthedocs.io/projects/edx-installing-configuring-and-running/en/latest/installation/index.html.
 
 Support
 -------
@@ -18,8 +171,9 @@ https://openedx.atlassian.net/projects/PLAT/issues
 FYI
 ---
 
-You should run any ``make`` targets described below on your local machine, *not*
-from within a VM.
+You should run all ``make`` commands described below on your local machine, *not*
+from within a VM (virtualenvs are ok, and in fact recommended) as these commands
+are for standing up a new docker based VM.
 
 Prerequisites
 -------------
@@ -96,7 +250,13 @@ a minimum of 2 CPUs and 6GB of memory works well.
    Be sure to share the cloned directories in the Docker -> Preferences... ->
    File Sharing box.
 
-3. Run the provision command, if you haven't already, to configure the various
+3. Pull any changes made to the various images on which the devstack depends.
+
+   .. code:: sh
+
+       make pull
+
+4. Run the provision command, if you haven't already, to configure the various
    services with superusers (for development without the auth service) and
    tenants (for multi-tenancy).
 
@@ -120,7 +280,7 @@ a minimum of 2 CPUs and 6GB of memory works well.
        make dev.sync.provision
 
 
-4. Start the services. This command will mount the repositories under the
+5. Start the services. This command will mount the repositories under the
    DEVSTACK\_WORKSPACE directory.
 
    **NOTE:** it may take up to 60 seconds for the LMS to start, even after the ``make dev.up`` command outputs ``done``.
@@ -345,6 +505,14 @@ Docker Compose files useful for integrating with the edx.org marketing site are
 available. This will NOT be useful to those outside of edX. For details on
 getting things up and running, see
 https://openedx.atlassian.net/wiki/display/OpenDev/Marketing+Site.
+
+How do I develop on an installed Python package?
+------------------------------------------------
+
+If you want to modify an installed package – for instance ``edx-enterprise`` or ``completion`` – clone the repository in
+``~/workspace/src/your-package``. Next, ssh into the appropriate docker container (``make lms-shell``),
+run ``pip install -e /edx/src/your-package``, and restart the service.
+
 
 How do I build images?
 ----------------------
@@ -668,9 +836,9 @@ you can connect to the container running it via VNC.
 | Chrome (via Selenium)  | vnc://0.0.0.0:15900  |
 +------------------------+----------------------+
 
-On macOS, enter the VNC connection string in Safari to connect via VNC. The VNC
-passwords for both browsers are randomly generated and logged at container
-startup, and can be found by running ``make vnc-passwords``.
+On macOS, enter the VNC connection string in the address bar in Safari to
+connect via VNC. The VNC passwords for both browsers are randomly generated and
+logged at container startup, and can be found by running ``make vnc-passwords``.
 
 Most tests are run in Firefox by default.  To use Chrome for tests that normally
 use Firefox instead, prefix the test command with
@@ -696,7 +864,7 @@ and run the tests manually via paver:
     paver e2e_test --exclude="whitelabel\|enterprise"
 
 The browser running the tests can be seen and interacted with via VNC as
-described above (Chrome is used by default).
+described above (Firefox is used by default).
 
 Troubleshooting: General Tips
 -----------------------------
@@ -743,7 +911,7 @@ data volumes.
 Reset
 ~~~~~
 
-Somtimes you just aren't sure what's wrong, if you would like to hit the reset button
+Sometimes you just aren't sure what's wrong, if you would like to hit the reset button
 run ``make dev.reset``.
 
 Running this command will perform the following steps:
@@ -991,8 +1159,8 @@ GitHub issue which explains the `current status of implementing delegated consis
 .. _devpi documentation: docs/devpi.rst
 .. _edx-platform testing documentation: https://github.com/edx/edx-platform/blob/master/docs/testing.rst#running-python-unit-tests
 .. _docker-sync: #improve-mac-osx-performance-with-docker-sync
-.. |Build Status| image:: https://travis-ci.org/edx/devstack.svg?branch=master
-    :target: https://travis-ci.org/edx/devstack
+.. |Build Status| image:: https://travis-ci.org/appsembler/devstack.svg?branch=master
+    :target: https://travis-ci.org/appsembler/devstack
     :alt: Travis
 .. _Docker CI Jenkins Jobs: https://tools-edx-jenkins.edx.org/job/DockerCI
 .. _How do I build images?: https://github.com/edx/devstack/tree/master#how-do-i-build-images

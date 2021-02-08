@@ -65,9 +65,10 @@ use the following options:
 
     - ``/edx/app/<SERVICE_NAME>/venvs/<SERVICE_NAME>/bin/python``
 
-  - For example, the path would be the following for the Credentials Service:
+  - For example, the path would be the following for the Ecommerce Service:
 
-    - ``/edx/app/credentials/venvs/credentials/bin/python``
+    - ``/edx/app/ecommerce/venvs/ecommerce/bin/python``
+    - Note: The Credentials Service might not have a virtualenv set up in the container. 
 
   - For either lms or studio, you need to use edxapp:
 
@@ -82,6 +83,8 @@ so you can easily switch back to old without this delay.
 
 **Warning**: When you change configuration files, the service drop-down gets
 reset. Remember to restore to the IDA you wish to test.
+
+**Some Tips**: If your remote isn't loading you may need to set your DEVSTACK_WORKSPACE variable globally in your ./bash_profile. Additionally try reseting docker as a last resort and things should sync successfully after that.
 
 Setup Django Support
 --------------------
@@ -268,6 +271,33 @@ While working in PyCharm, you could see the following error:
    The command '/bin/sh -c mv /user/bin/docker-compose /user/bin/docker-compose-original' returned a non-zero code: 1
 
 This issue has been fixed in PyCharm 2017.1.2.
+
+
+Cannot open the manage.py file
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The error happens when you try to run a stack (lms or studio for example)::
+
+    Attaching to edx.devstack.lms
+    edx.devstack.lms | /edx/app/edxapp/venvs/edxapp/bin/python: can't open file '/edx/app/edxapp/edx-platform/manage.py': [Errno 2] No such file or directory
+    edx.devstack.lms exited with code 2
+    Aborting on container exit...
+
+Best is to recheck all your settings in particular the Remote Interpreter's settings and make sure that you have included the docker-compose-host.yml file. Make also sure
+that you have defined the DEVSTACK_WORKSPACE environment variable correctly (i.e. to the root of your workspace where all repositories are checked out).
+
+You can check which volumes are mounted on each docker container by using the Docker Tool Window. Please note that there is an unnecessary volume creation in the process that
+maps /opt/project to the local source file folder. You can safely ignore this unless you forgot to add the  docker-compose-host.yml to the Configuration files in the setup above.
+
+For info, the Docker Tool Window (https://www.jetbrains.com/help/pycharm/using-docker-compose-as-a-remote-interpreter.html) can help to see what's happening:
+
+1. Click on the Docker/devstack instances and find your instance (for example Docker/devstack/lms/edx.devstack.lms)
+
+2. Select the Volume Bindings tab
+
+3. Make sure that the Container path and Host path are right. Normally you should have a line mapping /edx/app/edxapp/edx-platform to the related local source folder (i.e. often DEVSTACK_WORKSPACE/edx-platform).
+
+
 
 Project Interpreter has no packages
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
