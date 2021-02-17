@@ -1,5 +1,5 @@
-Open edX Devstack |Build Status|
-================================
+Open edX Devstack for Gymnasium |Build Status|
+==============================================
 
 Get up and running quickly with Open edX services.
 
