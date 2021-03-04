@@ -30,8 +30,8 @@ repos=(
 )
 
 private_repos=(
-    # Needed to run whitelabel tests.
-    # "https://github.com/edx/edx-themes.git"
+    # Get our environment files
+    "https://github.com/gymnasium/edx-env.git"
 )
 
 name_pattern=".*/(.*).git"
