@@ -18,6 +18,9 @@ docker-compose exec lms bash -c 'source /edx/app/edxapp/edxapp_env && cd /edx/ap
 #Installing prereqs crashes the process
 docker-compose restart lms
 
+echo "Copying lms.env.json to the container..."
+docker cp ~/workspace/edx-env/lms.env.json edx.devstack.lms:/edx/app/edxapp/lms.env.json
+
 # Run edxapp migrations first since they are needed for the service users and OAuth clients
 docker-compose exec lms bash -c 'source /edx/app/edxapp/edxapp_env && cd /edx/app/edxapp/edx-platform && paver update_db --settings devstack_docker'
 
