@@ -27,11 +27,13 @@ repos=(
     "https://github.com/gymnasium/edx-platform.git"
     "https://github.com/edx/xqueue.git"
     "https://github.com/edx/edx-analytics-pipeline.git"
+     # Get our custom environment files
+    "https://github.com/gymnasium/edx-env.git"
 )
 
 private_repos=(
-    # Get our environment files
-    "https://github.com/gymnasium/edx-env.git"
+    # Needed to run whitelabel tests.
+    "https://github.com/gymnasium/edx-themes.git"
 )
 
 name_pattern=".*/(.*).git"
