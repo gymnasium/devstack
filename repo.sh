@@ -28,7 +28,7 @@ repos=(
     "https://github.com/edx/xqueue.git"
     "https://github.com/edx/edx-analytics-pipeline.git"
      # Get our custom environment files
-    "https://github.com/gymnasium/edx-env.git"
+    "git@github.com:gymnasium/edx-env.git"
 )
 
 private_repos=(
