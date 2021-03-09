@@ -55,6 +55,9 @@ dev.reset: | down dev.repo.reset pull dev.up static update-db ## Attempts to res
 dev.status: ## Prints the status of all git repositories
 	./repo.sh status
 
+dev.submodule: ## Initializes submodules of git repositories
+	./repo.sh submodule
+
 dev.repo.reset: ## Attempts to reset the local repo checkouts to the master working state
 	./repo.sh reset
 

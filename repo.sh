@@ -147,10 +147,31 @@ status ()
     cd - &> /dev/null
 }
 
+submodule() {
+    currDir=$(pwd)
+    for repo in ${repos[*]}
+    do
+        [[ $repo =~ $name_pattern ]]
+        name="${BASH_REMATCH[1]}"
+
+        if [ -d "$name" ]; then
+            printf "\nInitializing submodules for [%s]:\n" $name
+            cd $name;
+            git submodule update --init --recursive;
+            cd "$currDir"
+        else
+            printf "The [%s] repo is not cloned. Continuing.\n" $name
+        fi
+    done
+    cd - &> /dev/null
+}
+
 if [ "$1" == "checkout" ]; then
     checkout
 elif [ "$1" == "clone" ]; then
     clone
+elif [ "$1" == "submodule" ]; then
+    submodule
 elif [ "$1" == "whitelabel" ]; then
     clone_private
 elif [ "$1" == "reset" ]; then
