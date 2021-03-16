@@ -205,6 +205,12 @@ xqueue_consumer-restart: ## Kill the XQueue development server. The watcher proc
 lms-static: ## Rebuild static assets for the LMS container
 	docker exec -t edx.devstack.lms bash -c 'source /edx/app/edxapp/edxapp_env && cd /edx/app/edxapp/edx-platform/ && paver update_assets'
 
+lms-gym-css: ## Rebuild SASS static assets for Gymnasium theme
+	docker exec -t edx.devstack.lms bash -c 'source /edx/app/edxapp/edxapp_env && cd /edx/app/edxapp/edx-platform/ && paver compile_sass --system=lms --theme-dirs /edx/app/edxapp/edx-platform/themes --themes=gymnasium'
+
+lms-gym: ## Rebuild static assets for Gymnasium theme
+	docker exec -t edx.devstack.lms bash -c 'source /edx/app/edxapp/edxapp_env && cd /edx/app/edxapp/edx-platform/ && paver --quiet update_assets lms --settings=aws --theme-dirs /edx/app/edxapp/edx-platform/themes --themes=gymnasium'
+
 studio-static: ## Rebuild static assets for the Studio container
 	docker exec -t edx.devstack.studio bash -c 'source /edx/app/edxapp/edxapp_env && cd /edx/app/edxapp/edx-platform/ && paver update_assets'
 
